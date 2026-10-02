@@ -1,28 +1,57 @@
-import { body } from "express-validator";
+import { body, oneOf, param } from "express-validator";
 import User from "../model/user";
+import { http401Error } from "./customError";
+import { RequestHandler } from "express";
+import jwt from "jsonwebtoken";
+
+export const verifyHeaderToken: RequestHandler = (req, res, next) => {
+  const token = req.header("Authorization");
+  if (!token) throw new http401Error("Access denied. No token provided.");
+  jwt.verify(token, process.env.SESSION_SECRET as string, (error: any) => {
+    if (error) {
+      throw new http401Error("Token expired or invalid.");
+    } else {
+      next();
+    }
+  });
+};
 
 export const validateEmail = body("email")
   .trim()
   .notEmpty()
-  .withMessage("Email is required")
+  .withMessage("EMAIL_REQUIRED")
   .bail()
   .isEmail()
-  .withMessage("Email is not a valid format")
-  .normalizeEmail()
-  .custom(async (value) => {
-    const existing = await User.findOne({ email: value });
-    if (existing) {
-      throw new Error("Email already exists");
-    }
-  });
+  .withMessage("EMAIL_NOT_VALID_FORMAT");
+
+export const validateDuplicateEmail = body("email").custom(async (value) => {
+  const existing = await User.findOne({ email: value });
+  if (existing) {
+    throw new Error("EMAIL_ALREADY_EXISTS");
+  }
+});
+
+export const validateEmailExist = body("email").custom(async (value) => {
+  const existing = await User.findOne({ email: value });
+  if (!existing) {
+    throw new Error("EMAIL_DONT_EXISTS");
+  }
+});
+
+export const validateUserExist = param("userId").custom(async (value) => {
+  const existing = await User.findById(value);
+  if (!existing) {
+    throw new Error("USER_DONT_EXISTS");
+  }
+});
 
 export const validatePassword = body("password")
   .trim()
   .notEmpty()
-  .withMessage("Password is required")
+  .withMessage("PASSWORD_REQUIRED")
   .bail()
   .isLength({ min: 8 })
-  .withMessage("Password must be at least 8 characters long")
+  .withMessage("PASSWORD_TOO_SHORT")
   .bail()
   .matches(/\d/)
-  .withMessage("Password must contain at least one number");
+  .withMessage("PASSWORD_NEEDS_NUMBER");

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUser = exports.userLogin = exports.createUser = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const user_1 = __importDefault(require("../model/user"));
 const customError_1 = require("../utils/customError");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -26,13 +27,11 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         }
         const cryptedPassword = yield bcryptjs_1.default.hash(req.body.password.replace(" ", ""), 12);
         const user = new user_1.default({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
             email: req.body.email,
             password: cryptedPassword,
         });
         yield user.save();
-        return res.status(201).send("success");
+        return res.status(204).send("success");
     }
     catch (error) {
         next(error);
@@ -59,8 +58,6 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
             user: {
                 id: userFind._id,
                 email: userFind.email,
-                firstName: userFind.firstName,
-                lastName: userFind.lastName,
             },
             token,
         });
@@ -72,12 +69,14 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
 exports.userLogin = userLogin;
 const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const errors = (0, express_validator_1.validationResult)(req);
-        const id = req.params.userId;
-        if (!errors.isEmpty()) {
-            throw new customError_1.http422Error(errors.array()[0].msg);
+        const id = req.params.id;
+        if (!mongoose_1.default.isValidObjectId(id)) {
+            throw new customError_1.http404Error("INVALID_USER_ID");
         }
-        const user = (yield user_1.default.findById(id));
+        const user = yield user_1.default.findById(id);
+        if (!user) {
+            throw new customError_1.http422Error("USER_DONT_EXITS");
+        }
         res.status(200).json({ user });
     }
     catch (error) {

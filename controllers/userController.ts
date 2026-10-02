@@ -1,11 +1,10 @@
 import { RequestHandler } from "express";
 import User from "../model/user";
-import { http422Error } from "../utils/customError";
+import { http404Error, http422Error } from "../utils/customError";
 import jwt from "jsonwebtoken";
 import bcryprt from "bcryptjs";
 import { User as UserProps } from "../types/type";
-import { body, validationResult } from "express-validator";
-import { passwordRegex } from "../utils/constants";
+import { validationResult } from "express-validator";
 
 export const createUser: RequestHandler<{}, {}, UserProps> = async (
   req,
@@ -18,25 +17,87 @@ export const createUser: RequestHandler<{}, {}, UserProps> = async (
       throw new http422Error(errors.array()[0].msg);
     }
 
-    const password = req.body.password;
-
-    if (!password) {
-      throw new http422Error("Password is required");
-    }
-
-    if (!passwordRegex.test(password)) {
-      throw new http422Error("Password too weak");
-    }
-
-    const cryptedPassword = await bcryprt.hash(password.replace(" ", ""), 12);
+    const cryptedPassword = await bcryprt.hash(
+      req.body.password.replace(" ", ""),
+      12,
+    );
 
     const user = new User({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
       email: req.body.email,
       password: cryptedPassword,
     });
 
-    const userCreate = await user.save();
-    return res.status(201).json({ user: userCreate });
+    await user.save();
+    return res.status(201).send("success");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const userLogin: RequestHandler<{}, {}, UserProps> = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    const token = jwt.sign(
+      { email: req.body.email },
+      process.env.SESSION_SECRET as string,
+      {
+        expiresIn: "90d",
+      },
+    );
+
+    const userFind = (await User.findOne({
+      email: req.body.email,
+    })) as UserProps;
+
+    const passwordCompare = await bcryprt.compare(
+      req.body.password.replace(" ", ""),
+      userFind.password,
+    );
+
+    if (!passwordCompare) {
+      throw new http422Error("WRONG_PASSWORD");
+    }
+
+    res.status(200).json({
+      user: {
+        id: userFind._id,
+        email: userFind.email,
+        firstName: userFind.firstName,
+        lastName: userFind.lastName,
+      },
+      token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUser: RequestHandler<{ userId: string }> = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const errors = validationResult(req);
+    const id = req.params.userId;
+
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+    const user = (await User.findById(id)) as UserProps;
+
+    res.status(200).json({ user });
   } catch (error) {
     next(error);
   }

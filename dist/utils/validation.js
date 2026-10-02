@@ -12,30 +12,57 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validatePassword = exports.validateEmail = void 0;
+exports.validatePassword = exports.validateUserExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateEmail = exports.verifyHeaderToken = void 0;
 const express_validator_1 = require("express-validator");
 const user_1 = __importDefault(require("../model/user"));
+const customError_1 = require("./customError");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const verifyHeaderToken = (req, res, next) => {
+    const token = req.header("Authorization");
+    if (!token)
+        throw new customError_1.http401Error("Access denied. No token provided.");
+    jsonwebtoken_1.default.verify(token, process.env.SESSION_SECRET, (error) => {
+        if (error) {
+            throw new customError_1.http401Error("Token expired or invalid.");
+        }
+        else {
+            next();
+        }
+    });
+};
+exports.verifyHeaderToken = verifyHeaderToken;
 exports.validateEmail = (0, express_validator_1.body)("email")
     .trim()
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage("EMAIL_REQUIRED")
     .bail()
     .isEmail()
-    .withMessage("Email is not a valid format")
-    .normalizeEmail()
-    .custom((value) => __awaiter(void 0, void 0, void 0, function* () {
+    .withMessage("EMAIL_NOT_VALID_FORMAT");
+exports.validateDuplicateEmail = (0, express_validator_1.body)("email").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
     const existing = yield user_1.default.findOne({ email: value });
     if (existing) {
-        throw new Error("Email already exists");
+        throw new Error("EMAIL_ALREADY_EXISTS");
+    }
+}));
+exports.validateEmailExist = (0, express_validator_1.body)("email").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield user_1.default.findOne({ email: value });
+    if (!existing) {
+        throw new Error("EMAIL_DONT_EXISTS");
+    }
+}));
+exports.validateUserExist = (0, express_validator_1.param)("userId").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield user_1.default.findById(value);
+    if (!existing) {
+        throw new Error("USER_DONT_EXISTS");
     }
 }));
 exports.validatePassword = (0, express_validator_1.body)("password")
     .trim()
     .notEmpty()
-    .withMessage("Password is required")
+    .withMessage("PASSWORD_REQUIRED")
     .bail()
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
+    .withMessage("PASSWORD_TOO_SHORT")
     .bail()
     .matches(/\d/)
-    .withMessage("Password must contain at least one number");
+    .withMessage("PASSWORD_NEEDS_NUMBER");
