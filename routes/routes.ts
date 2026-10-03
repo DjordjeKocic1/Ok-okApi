@@ -6,14 +6,19 @@ import {
   validatePassword,
   validateEmailExist,
   validateUserExist,
+  validateAuthUser,
+  validateServiceExist,
+  validateBodyServiceExist,
 } from "../utils/validation";
 import { http404Error } from "../utils/customError";
 import {
   createService,
   getUserServices,
   getServicesByLocation,
+  updateService,
 } from "../controllers/serviceController";
 import { createServiceRequest } from "../controllers/serviceRequestController";
+import { auth } from "../middleware/auth";
 
 require("dotenv").config();
 
@@ -28,15 +33,23 @@ router.post(
   createUser,
 );
 router.post("/auth/login", validateEmail, validateEmailExist, userLogin);
-router.get("/user/:userId", validateUserExist, getUser);
+
+//User routes
+router.get("/user", auth, validateAuthUser, getUser);
 
 //Service Routes
-router.post("/create-service/:userId", validateUserExist, createService);
+router.get("/services", auth, validateAuthUser, getUserServices);
 router.get("/services/:locationStart/:locationEnd", getServicesByLocation);
-router.get("/services/:userId", validateUserExist, getUserServices);
+router.post("/create-service", auth, validateAuthUser, createService);
+router.put("/services/:serviceId", auth, validateServiceExist, updateService);
 
 //Service Request Routes
-router.post("/create-service-request", createServiceRequest);
+router.post(
+  "/create-service-request",
+  auth,
+  validateBodyServiceExist,
+  createServiceRequest,
+);
 //404
 router.all("/{*splat}", (req, res, next) => {
   throw new http404Error(`Requested url not found`);

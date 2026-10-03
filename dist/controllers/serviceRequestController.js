@@ -14,9 +14,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createServiceRequest = void 0;
 const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
+const express_validator_1 = require("express-validator");
+const customError_1 = require("../utils/customError");
+const service_1 = __importDefault(require("../model/service"));
 const createServiceRequest = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const serviceRequest = new serviceRequest_1.default(req.body);
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const service = (yield service_1.default.findById(req.body.service));
+        const serviceRequest = new serviceRequest_1.default(Object.assign(Object.assign({}, req.body), { toUser: service.user, fromUser: req.userId }));
         yield serviceRequest.save();
         res.status(201).send("success");
     }

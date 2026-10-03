@@ -1,0 +1,7 @@
+PUT http://localhost:3000/services/6ac15d4864f5ae51c3d373a5
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWMxNDg5NjNiMDczMWI3NjdmNjU4MWQiLCJpYXQiOjE3OTEwNTcyMTUsImV4cCI6MTc5ODgzMzIxNX0.nx_Tqrqd7RbcdyDkfEvhtHTKLXQhv_TuSvIYQ_JUG3E
+
+{
+    "transportMode": "truck"
+}

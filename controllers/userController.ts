@@ -30,7 +30,7 @@ export const createUser: RequestHandler<{}, {}, UserProps> = async (
     });
 
     await user.save();
-    return res.status(201).send("success");
+    res.status(201).send("success");
   } catch (error) {
     next(error);
   }
@@ -48,14 +48,6 @@ export const userLogin: RequestHandler<{}, {}, UserProps> = async (
       throw new http422Error(errors.array()[0].msg);
     }
 
-    const token = jwt.sign(
-      { email: req.body.email },
-      process.env.SESSION_SECRET as string,
-      {
-        expiresIn: "90d",
-      },
-    );
-
     const userFind = (await User.findOne({
       email: req.body.email,
     })) as UserProps;
@@ -69,9 +61,14 @@ export const userLogin: RequestHandler<{}, {}, UserProps> = async (
       throw new http422Error("WRONG_PASSWORD");
     }
 
+    const token = jwt.sign(
+      { userId: userFind._id },
+      process.env.SESSION_SECRET as string,
+      { expiresIn: "90d" },
+    );
+
     res.status(200).json({
       user: {
-        id: userFind._id,
         email: userFind.email,
         firstName: userFind.firstName,
         lastName: userFind.lastName,
@@ -83,11 +80,7 @@ export const userLogin: RequestHandler<{}, {}, UserProps> = async (
   }
 };
 
-export const getUser: RequestHandler<{ userId: string }> = async (
-  req,
-  res,
-  next,
-) => {
+export const getUser: RequestHandler = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     const id = req.params.userId;
@@ -95,7 +88,7 @@ export const getUser: RequestHandler<{ userId: string }> = async (
     if (!errors.isEmpty()) {
       throw new http422Error(errors.array()[0].msg);
     }
-    const user = (await User.findById(id)) as UserProps;
+    const user = (await User.findById(req.userId)) as UserProps;
 
     res.status(200).json({ user });
   } catch (error) {

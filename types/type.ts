@@ -48,7 +48,6 @@ export interface Service {
 export interface ServiceRequest {
   service: Types.ObjectId;
   fromUser: Types.ObjectId;
-  toUser: Types.ObjectId;
   transportDescription: string;
   packageWeight: number;
   specialRequest?: string;

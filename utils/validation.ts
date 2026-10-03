@@ -1,20 +1,6 @@
-import { body, oneOf, param } from "express-validator";
+import { body, check, param } from "express-validator";
 import User from "../model/user";
-import { http401Error } from "./customError";
-import { RequestHandler } from "express";
-import jwt from "jsonwebtoken";
-
-export const verifyHeaderToken: RequestHandler = (req, res, next) => {
-  const token = req.header("Authorization");
-  if (!token) throw new http401Error("Access denied. No token provided.");
-  jwt.verify(token, process.env.SESSION_SECRET as string, (error: any) => {
-    if (error) {
-      throw new http401Error("Token expired or invalid.");
-    } else {
-      next();
-    }
-  });
-};
+import Service from "../model/service";
 
 export const validateEmail = body("email")
   .trim()
@@ -23,6 +9,22 @@ export const validateEmail = body("email")
   .bail()
   .isEmail()
   .withMessage("EMAIL_NOT_VALID_FORMAT");
+
+export const validatePassword = body("password")
+  .trim()
+  .notEmpty()
+  .withMessage("PASSWORD_REQUIRED")
+  .bail()
+  .isLength({ min: 8 })
+  .withMessage("PASSWORD_TOO_SHORT")
+  .bail()
+  .matches(/\d/)
+  .withMessage("PASSWORD_NEEDS_NUMBER");
+
+export const validateAuthUser = check().custom(async (_value, { req }) => {
+  const exists = await User.findById(req.userId);
+  if (!exists) throw new Error("USER_DONT_EXISTS");
+});
 
 export const validateDuplicateEmail = body("email").custom(async (value) => {
   const existing = await User.findOne({ email: value });
@@ -45,13 +47,15 @@ export const validateUserExist = param("userId").custom(async (value) => {
   }
 });
 
-export const validatePassword = body("password")
-  .trim()
-  .notEmpty()
-  .withMessage("PASSWORD_REQUIRED")
-  .bail()
-  .isLength({ min: 8 })
-  .withMessage("PASSWORD_TOO_SHORT")
-  .bail()
-  .matches(/\d/)
-  .withMessage("PASSWORD_NEEDS_NUMBER");
+const serviceExists = (location: typeof body | typeof param, field: string) =>
+  location(field)
+    .isMongoId()
+    .withMessage("SERVICE_INVALID_ID")
+    .bail()
+    .custom(async (value) => {
+      const exists = await Service.exists({ _id: value });
+      if (!exists) throw new Error("SERVICE_DONT_EXISTS");
+    });
+
+export const validateServiceExist = serviceExists(param, "serviceId");
+export const validateBodyServiceExist = serviceExists(body, "service");

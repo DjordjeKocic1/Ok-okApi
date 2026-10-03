@@ -12,25 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validatePassword = exports.validateUserExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateEmail = exports.verifyHeaderToken = void 0;
+exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateUserExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validatePassword = exports.validateEmail = void 0;
 const express_validator_1 = require("express-validator");
 const user_1 = __importDefault(require("../model/user"));
-const customError_1 = require("./customError");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const verifyHeaderToken = (req, res, next) => {
-    const token = req.header("Authorization");
-    if (!token)
-        throw new customError_1.http401Error("Access denied. No token provided.");
-    jsonwebtoken_1.default.verify(token, process.env.SESSION_SECRET, (error) => {
-        if (error) {
-            throw new customError_1.http401Error("Token expired or invalid.");
-        }
-        else {
-            next();
-        }
-    });
-};
-exports.verifyHeaderToken = verifyHeaderToken;
+const service_1 = __importDefault(require("../model/service"));
 exports.validateEmail = (0, express_validator_1.body)("email")
     .trim()
     .notEmpty()
@@ -38,6 +23,21 @@ exports.validateEmail = (0, express_validator_1.body)("email")
     .bail()
     .isEmail()
     .withMessage("EMAIL_NOT_VALID_FORMAT");
+exports.validatePassword = (0, express_validator_1.body)("password")
+    .trim()
+    .notEmpty()
+    .withMessage("PASSWORD_REQUIRED")
+    .bail()
+    .isLength({ min: 8 })
+    .withMessage("PASSWORD_TOO_SHORT")
+    .bail()
+    .matches(/\d/)
+    .withMessage("PASSWORD_NEEDS_NUMBER");
+exports.validateAuthUser = (0, express_validator_1.check)().custom((_value_1, _a) => __awaiter(void 0, [_value_1, _a], void 0, function* (_value, { req }) {
+    const exists = yield user_1.default.findById(req.userId);
+    if (!exists)
+        throw new Error("USER_DONT_EXISTS");
+}));
 exports.validateDuplicateEmail = (0, express_validator_1.body)("email").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
     const existing = yield user_1.default.findOne({ email: value });
     if (existing) {
@@ -56,13 +56,14 @@ exports.validateUserExist = (0, express_validator_1.param)("userId").custom((val
         throw new Error("USER_DONT_EXISTS");
     }
 }));
-exports.validatePassword = (0, express_validator_1.body)("password")
-    .trim()
-    .notEmpty()
-    .withMessage("PASSWORD_REQUIRED")
+const serviceExists = (location, field) => location(field)
+    .isMongoId()
+    .withMessage("SERVICE_INVALID_ID")
     .bail()
-    .isLength({ min: 8 })
-    .withMessage("PASSWORD_TOO_SHORT")
-    .bail()
-    .matches(/\d/)
-    .withMessage("PASSWORD_NEEDS_NUMBER");
+    .custom((value) => __awaiter(void 0, void 0, void 0, function* () {
+    const exists = yield service_1.default.exists({ _id: value });
+    if (!exists)
+        throw new Error("SERVICE_DONT_EXISTS");
+}));
+exports.validateServiceExist = serviceExists(express_validator_1.param, "serviceId");
+exports.validateBodyServiceExist = serviceExists(express_validator_1.body, "service");

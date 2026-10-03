@@ -32,7 +32,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             password: cryptedPassword,
         });
         yield user.save();
-        return res.status(201).send("success");
+        res.status(201).send("success");
     }
     catch (error) {
         next(error);
@@ -45,9 +45,6 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         if (!errors.isEmpty()) {
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
-        const token = jsonwebtoken_1.default.sign({ email: req.body.email }, process.env.SESSION_SECRET, {
-            expiresIn: "90d",
-        });
         const userFind = (yield user_1.default.findOne({
             email: req.body.email,
         }));
@@ -55,9 +52,9 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         if (!passwordCompare) {
             throw new customError_1.http422Error("WRONG_PASSWORD");
         }
+        const token = jsonwebtoken_1.default.sign({ userId: userFind._id }, process.env.SESSION_SECRET, { expiresIn: "90d" });
         res.status(200).json({
             user: {
-                id: userFind._id,
                 email: userFind.email,
                 firstName: userFind.firstName,
                 lastName: userFind.lastName,
@@ -77,7 +74,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         if (!errors.isEmpty()) {
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
-        const user = (yield user_1.default.findById(id));
+        const user = (yield user_1.default.findById(req.userId));
         res.status(200).json({ user });
     }
     catch (error) {

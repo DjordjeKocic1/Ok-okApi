@@ -4,11 +4,11 @@ import { Service as ServiceProps } from "../types/type";
 import { validationResult } from "express-validator";
 import { http422Error } from "../utils/customError";
 
-export const createService: RequestHandler<
-  { userId: string },
-  {},
-  ServiceProps
-> = async (req, res, next) => {
+export const createService: RequestHandler<{}, {}, ServiceProps> = async (
+  req,
+  res,
+  next,
+) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -16,10 +16,34 @@ export const createService: RequestHandler<
     }
     const service = new Service({
       ...req.body,
-      user: req.params.userId,
+      user: req.userId,
     });
     await service.save();
     res.status(201).send("success");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateService: RequestHandler<
+  { serviceId: string },
+  {},
+  {}
+> = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+    const service = await Service.findOneAndUpdate(
+      { _id: req.params.serviceId, user: req.userId },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    res.status(200).json({ service });
   } catch (error) {
     next(error);
   }
@@ -48,20 +72,19 @@ export const getServicesByLocation: RequestHandler<
   }
 };
 
-export const getUserServices: RequestHandler<
-  { userId: string },
-  {},
-  {}
-> = async (req, res, next) => {
+export const getUserServices: RequestHandler = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       throw new http422Error(errors.array()[0].msg);
     }
-    const services = await Service.find({ user: req.params.userId }).populate(
-      "requests",
-    );
-    res.status(201).json({ services });
+    const services = await Service.find({ user: req.userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "requests",
+        populate: { path: "fromUser", select: "firstName lastName ratings" },
+      });
+    res.status(200).json({ services });
   } catch (error) {
     next(error);
   }

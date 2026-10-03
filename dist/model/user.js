@@ -14,12 +14,11 @@ const userSchema = new Schema({
     },
     phone: { type: String, required: false },
     idVerified: { type: Boolean, required: false },
-    password: { type: String, select: false },
+    password: String,
     ratings: [
         {
             _id: false,
             reviewer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-            firstName: String,
             rating: Number,
             comment: { type: String, required: false },
         },
