@@ -22,28 +22,21 @@ export const validatePassword = body("password")
   .withMessage("PASSWORD_NEEDS_NUMBER");
 
 export const validateAuthUser = check().custom(async (_value, { req }) => {
-  const exists = await User.findById(req.userId);
+  const exists = await User.exists({ _id: req.userId });
   if (!exists) throw new Error("USER_DONT_EXISTS");
 });
 
 export const validateDuplicateEmail = body("email").custom(async (value) => {
-  const existing = await User.findOne({ email: value });
+  const existing = await User.exists({ email: value });
   if (existing) {
     throw new Error("EMAIL_ALREADY_EXISTS");
   }
 });
 
 export const validateEmailExist = body("email").custom(async (value) => {
-  const existing = await User.findOne({ email: value });
+  const existing = await User.exists({ email: value });
   if (!existing) {
     throw new Error("EMAIL_DONT_EXISTS");
-  }
-});
-
-export const validateUserExist = param("userId").custom(async (value) => {
-  const existing = await User.findById(value);
-  if (!existing) {
-    throw new Error("USER_DONT_EXISTS");
   }
 });
 

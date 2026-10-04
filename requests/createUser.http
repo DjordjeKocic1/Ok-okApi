@@ -1,9 +1,0 @@
-POST http://localhost:3000/auth/create-account
-Content-Type: application/json
-
-{
-    "firstName": "Djordje",
-    "lastName": "Kocic",
-    "email":"djordjekocic@gmail.com",
-    "password": "Djole1989"
-}

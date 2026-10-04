@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateUserExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validatePassword = exports.validateEmail = void 0;
+exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validatePassword = exports.validateEmail = void 0;
 const express_validator_1 = require("express-validator");
 const user_1 = __importDefault(require("../model/user"));
 const service_1 = __importDefault(require("../model/service"));
@@ -34,26 +34,20 @@ exports.validatePassword = (0, express_validator_1.body)("password")
     .matches(/\d/)
     .withMessage("PASSWORD_NEEDS_NUMBER");
 exports.validateAuthUser = (0, express_validator_1.check)().custom((_value_1, _a) => __awaiter(void 0, [_value_1, _a], void 0, function* (_value, { req }) {
-    const exists = yield user_1.default.findById(req.userId);
+    const exists = yield user_1.default.exists({ _id: req.userId });
     if (!exists)
         throw new Error("USER_DONT_EXISTS");
 }));
 exports.validateDuplicateEmail = (0, express_validator_1.body)("email").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
-    const existing = yield user_1.default.findOne({ email: value });
+    const existing = yield user_1.default.exists({ email: value });
     if (existing) {
         throw new Error("EMAIL_ALREADY_EXISTS");
     }
 }));
 exports.validateEmailExist = (0, express_validator_1.body)("email").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
-    const existing = yield user_1.default.findOne({ email: value });
+    const existing = yield user_1.default.exists({ email: value });
     if (!existing) {
         throw new Error("EMAIL_DONT_EXISTS");
-    }
-}));
-exports.validateUserExist = (0, express_validator_1.param)("userId").custom((value) => __awaiter(void 0, void 0, void 0, function* () {
-    const existing = yield user_1.default.findById(value);
-    if (!existing) {
-        throw new Error("USER_DONT_EXISTS");
     }
 }));
 const serviceExists = (location, field) => location(field)

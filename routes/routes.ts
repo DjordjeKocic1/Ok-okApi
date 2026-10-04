@@ -5,7 +5,6 @@ import {
   validateDuplicateEmail,
   validatePassword,
   validateEmailExist,
-  validateUserExist,
   validateAuthUser,
   validateServiceExist,
   validateBodyServiceExist,

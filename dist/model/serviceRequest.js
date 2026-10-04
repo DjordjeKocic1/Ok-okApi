@@ -19,6 +19,12 @@ const serviceRequestSchema = new Schema({
         required: true,
         immutable: true,
     },
+    toUser: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        immutable: true,
+    },
     transportDescription: String,
     packageWeight: Number,
     specialRequest: { type: String, required: false },
