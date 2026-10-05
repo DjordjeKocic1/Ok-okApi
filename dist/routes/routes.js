@@ -22,6 +22,7 @@ router.get("/services", auth_1.auth, validation_1.validateAuthUser, serviceContr
 router.get("/services/:locationStart/:locationEnd", serviceController_1.getServicesByLocation);
 router.post("/create-service", auth_1.auth, validation_1.validateAuthUser, serviceController_1.createService);
 router.put("/services/:serviceId", auth_1.auth, validation_1.validateServiceExist, serviceController_1.updateService);
+router.delete("/services/:serviceId", auth_1.auth, validation_1.validateServiceExist, serviceController_1.deleteService);
 //Service Request Routes
 router.post("/create-service-request", auth_1.auth, validation_1.validateBodyServiceExist, serviceRequestController_1.createServiceRequest);
 //404

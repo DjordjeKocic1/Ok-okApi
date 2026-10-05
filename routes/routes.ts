@@ -15,6 +15,7 @@ import {
   getUserServices,
   getServicesByLocation,
   updateService,
+  deleteService,
 } from "../controllers/serviceController";
 import { createServiceRequest } from "../controllers/serviceRequestController";
 import { auth } from "../middleware/auth";
@@ -41,6 +42,12 @@ router.get("/services", auth, validateAuthUser, getUserServices);
 router.get("/services/:locationStart/:locationEnd", getServicesByLocation);
 router.post("/create-service", auth, validateAuthUser, createService);
 router.put("/services/:serviceId", auth, validateServiceExist, updateService);
+router.delete(
+  "/services/:serviceId",
+  auth,
+  validateServiceExist,
+  deleteService,
+);
 
 //Service Request Routes
 router.post(

@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserServices = exports.getServicesByLocation = exports.updateService = exports.createService = void 0;
+exports.deleteService = exports.getUserServices = exports.getServicesByLocation = exports.updateService = exports.createService = void 0;
 const service_1 = __importDefault(require("../model/service"));
+const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
 const express_validator_1 = require("express-validator");
 const customError_1 = require("../utils/customError");
 const createService = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -38,9 +39,12 @@ const updateService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
         const service = yield service_1.default.findOneAndUpdate({ _id: req.params.serviceId, user: req.userId }, req.body, {
-            new: true,
+            returnDocument: "after",
             runValidators: true,
         });
+        if (!service) {
+            throw new customError_1.http404Error("SERVICE_NOT_FOUND");
+        }
         res.status(200).json({ service });
     }
     catch (error) {
@@ -81,3 +85,24 @@ const getUserServices = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getUserServices = getUserServices;
+const deleteService = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const service = yield service_1.default.findOneAndDelete({
+            _id: req.params.serviceId,
+            user: req.userId,
+        });
+        if (!service) {
+            throw new customError_1.http404Error("SERVICE_NOT_FOUND");
+        }
+        yield serviceRequest_1.default.deleteMany({ service: service._id });
+        res.status(204).send("success");
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.deleteService = deleteService;

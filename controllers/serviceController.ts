@@ -1,8 +1,9 @@
 import { RequestHandler } from "express";
 import Service from "../model/service";
+import ServiceRequest from "../model/serviceRequest";
 import { Service as ServiceProps } from "../types/type";
 import { validationResult } from "express-validator";
-import { http422Error } from "../utils/customError";
+import { http404Error, http422Error } from "../utils/customError";
 
 export const createService: RequestHandler<{}, {}, ServiceProps> = async (
   req,
@@ -39,10 +40,14 @@ export const updateService: RequestHandler<
       { _id: req.params.serviceId, user: req.userId },
       req.body,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       },
     );
+    if (!service) {
+      throw new http404Error("SERVICE_NOT_FOUND");
+    }
+
     res.status(200).json({ service });
   } catch (error) {
     next(error);
@@ -85,6 +90,33 @@ export const getUserServices: RequestHandler = async (req, res, next) => {
         populate: { path: "fromUser", select: "firstName lastName ratings" },
       });
     res.status(200).json({ services });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteService: RequestHandler<
+  { serviceId: string },
+  {},
+  {}
+> = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+    const service = await Service.findOneAndDelete({
+      _id: req.params.serviceId,
+      user: req.userId,
+    });
+
+    if (!service) {
+      throw new http404Error("SERVICE_NOT_FOUND");
+    }
+
+    await ServiceRequest.deleteMany({ service: service._id });
+
+    res.status(204).send("success");
   } catch (error) {
     next(error);
   }
