@@ -60,10 +60,10 @@ export const getServicesByLocation: RequestHandler<
   {}
 > = async (req, res, next) => {
   try {
-    const services = await Service.find().populate(
-      "user",
-      "firstName lastName ratings",
-    );
+    const services = await Service.find({
+      status: "active",
+      departureTime: { $gt: new Date() },
+    }).populate("user", "firstName lastName review");
     const filtered = services.filter(
       (s) =>
         s.destinationStart.city.toLowerCase() ===

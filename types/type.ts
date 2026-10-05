@@ -6,13 +6,6 @@ export interface ErrorMsg {
   type?: string;
 }
 
-export interface Rating {
-  reviewer: Types.ObjectId;
-  firstName: string;
-  rating: number;
-  comment?: string;
-}
-
 export interface Destination {
   destinationStart: { country: string; city: string };
   destinationEnd: { country: string; city: string };
@@ -26,9 +19,15 @@ export interface User {
   phone?: string;
   idVerified?: boolean;
   password: string;
-  ratings: Rating[];
   ratingAverage: number;
   searchedDestinations: Destination[];
+}
+
+export interface Review {
+  fromUser: Types.ObjectId;
+  toUser: Types.ObjectId;
+  rating: number;
+  comment: string;
 }
 
 export interface Service {
@@ -37,7 +36,7 @@ export interface Service {
   tripNote: string;
   destinationStart: { country: string; city: string };
   destinationEnd: { country: string; city: string };
-  departureTime: string;
+  departureTime: Date;
   cost: number;
   maxWeight: number;
   restrictedItems: string[];
@@ -49,6 +48,7 @@ export interface ServiceRequest {
   service: Types.ObjectId;
   fromUser: Types.ObjectId;
   toUser: Types.ObjectId;
+  status: "pending" | "accepted" | "rejected" | "cancelled";
   transportDescription: string;
   packageWeight: number;
   specialRequest?: string;

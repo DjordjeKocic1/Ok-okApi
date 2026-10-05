@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validatePassword = exports.validateEmail = void 0;
+exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateServiceRequestExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validatePassword = exports.validateEmail = void 0;
 const express_validator_1 = require("express-validator");
 const user_1 = __importDefault(require("../model/user"));
 const service_1 = __importDefault(require("../model/service"));
+const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
 exports.validateEmail = (0, express_validator_1.body)("email")
     .trim()
     .notEmpty()
@@ -48,6 +49,16 @@ exports.validateEmailExist = (0, express_validator_1.body)("email").custom((valu
     const existing = yield user_1.default.exists({ email: value });
     if (!existing) {
         throw new Error("EMAIL_DONT_EXISTS");
+    }
+}));
+exports.validateServiceRequestExist = (0, express_validator_1.param)("requestId")
+    .isMongoId()
+    .withMessage("REQUEST_INVALID_ID")
+    .bail()
+    .custom((value) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield serviceRequest_1.default.exists({ _id: value });
+    if (!existing) {
+        throw new Error("REQUEST_NOT_FOUND");
     }
 }));
 const serviceExists = (location, field) => location(field)

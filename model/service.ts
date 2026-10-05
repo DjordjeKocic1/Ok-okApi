@@ -6,10 +6,15 @@ const Schema = mongoose.Schema;
 const serviceSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    status: {
+      type: String,
+      enum: ["active", "cancelled", "completed"],
+      default: "active",
+    },
     tripNote: String,
     destinationStart: { country: String, city: String },
     destinationEnd: { country: String, city: String },
-    departureTime: String,
+    departureTime: { type: Date, required: true },
     cost: Number,
     maxWeight: Number,
     restrictedItems: {

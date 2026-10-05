@@ -25,9 +25,15 @@ const serviceRequestSchema = new Schema({
         required: true,
         immutable: true,
     },
+    status: {
+        type: String,
+        enum: ["pending", "accepted", "rejected", "cancelled"],
+        default: "pending",
+    },
     transportDescription: String,
     packageWeight: Number,
     specialRequest: { type: String, required: false },
     specialRequestCost: { type: Number, required: false },
 }, { timestamps: true });
+serviceRequestSchema.index({ service: 1, fromUser: 1 }, { unique: true });
 exports.default = mongoose_1.default.model("ServiceRequest", serviceRequestSchema);

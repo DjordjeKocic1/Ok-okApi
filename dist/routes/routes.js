@@ -25,6 +25,7 @@ router.put("/services/:serviceId", auth_1.auth, validation_1.validateServiceExis
 router.delete("/services/:serviceId", auth_1.auth, validation_1.validateServiceExist, serviceController_1.deleteService);
 //Service Request Routes
 router.post("/create-service-request", auth_1.auth, validation_1.validateBodyServiceExist, serviceRequestController_1.createServiceRequest);
+router.put("/update-service-request/:requestId", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.updateServiceRequestStatus);
 //404
 router.all("/{*splat}", (req, res, next) => {
     throw new customError_1.http404Error(`Requested url not found`);

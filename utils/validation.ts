@@ -1,6 +1,7 @@
 import { body, check, param } from "express-validator";
 import User from "../model/user";
 import Service from "../model/service";
+import ServiceRequest from "../model/serviceRequest";
 
 export const validateEmail = body("email")
   .trim()
@@ -39,6 +40,17 @@ export const validateEmailExist = body("email").custom(async (value) => {
     throw new Error("EMAIL_DONT_EXISTS");
   }
 });
+
+export const validateServiceRequestExist = param("requestId")
+  .isMongoId()
+  .withMessage("REQUEST_INVALID_ID")
+  .bail()
+  .custom(async (value) => {
+    const existing = await ServiceRequest.exists({ _id: value });
+    if (!existing) {
+      throw new Error("REQUEST_NOT_FOUND");
+    }
+  });
 
 const serviceExists = (location: typeof body | typeof param, field: string) =>
   location(field)

@@ -8,6 +8,7 @@ import {
   validateAuthUser,
   validateServiceExist,
   validateBodyServiceExist,
+  validateServiceRequestExist,
 } from "../utils/validation";
 import { http404Error } from "../utils/customError";
 import {
@@ -17,7 +18,10 @@ import {
   updateService,
   deleteService,
 } from "../controllers/serviceController";
-import { createServiceRequest } from "../controllers/serviceRequestController";
+import {
+  createServiceRequest,
+  updateServiceRequestStatus,
+} from "../controllers/serviceRequestController";
 import { auth } from "../middleware/auth";
 
 require("dotenv").config();
@@ -56,6 +60,13 @@ router.post(
   validateBodyServiceExist,
   createServiceRequest,
 );
+router.put(
+  "/update-service-request/:requestId",
+  auth,
+  validateServiceRequestExist,
+  updateServiceRequestStatus,
+);
+
 //404
 router.all("/{*splat}", (req, res, next) => {
   throw new http404Error(`Requested url not found`);

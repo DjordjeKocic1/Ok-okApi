@@ -24,6 +24,11 @@ const serviceRequestSchema = new Schema(
       required: true,
       immutable: true,
     },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected", "cancelled"],
+      default: "pending",
+    },
     transportDescription: String,
     packageWeight: Number,
     specialRequest: { type: String, required: false },
@@ -31,6 +36,8 @@ const serviceRequestSchema = new Schema(
   },
   { timestamps: true },
 );
+
+serviceRequestSchema.index({ service: 1, fromUser: 1 }, { unique: true });
 
 export default mongoose.model<ServiceRequest>(
   "ServiceRequest",

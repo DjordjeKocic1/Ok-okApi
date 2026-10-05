@@ -54,7 +54,10 @@ const updateService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 exports.updateService = updateService;
 const getServicesByLocation = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const services = yield service_1.default.find().populate("user", "firstName lastName ratings");
+        const services = yield service_1.default.find({
+            status: "active",
+            departureTime: { $gt: new Date() },
+        }).populate("user", "firstName lastName review");
         const filtered = services.filter((s) => s.destinationStart.city.toLowerCase() ===
             req.params.locationStart.toLowerCase() &&
             s.destinationEnd.city.toLowerCase() ===

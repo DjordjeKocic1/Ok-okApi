@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createServiceRequest = void 0;
+exports.updateServiceRequestStatus = exports.createServiceRequest = void 0;
 const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
 const express_validator_1 = require("express-validator");
 const customError_1 = require("../utils/customError");
@@ -27,6 +27,13 @@ const createServiceRequest = (req, res, next) => __awaiter(void 0, void 0, void 
         if (service.user.toString() === req.userId) {
             throw new customError_1.http422Error("CANNOT_REQUEST_OWN_SERVICE");
         }
+        const alreadyRequested = yield serviceRequest_1.default.exists({
+            service: service._id,
+            fromUser: req.userId,
+        });
+        if (alreadyRequested) {
+            throw new customError_1.http422Error("REQUEST_ALREADY_EXISTS");
+        }
         const serviceRequest = new serviceRequest_1.default(Object.assign(Object.assign({}, req.body), { toUser: service.user, fromUser: req.userId }));
         yield serviceRequest.save();
         res.status(201).send("success");
@@ -36,3 +43,38 @@ const createServiceRequest = (req, res, next) => __awaiter(void 0, void 0, void 
     }
 });
 exports.createServiceRequest = createServiceRequest;
+const updateServiceRequestStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const { status } = req.body;
+        const serviceRequest = yield serviceRequest_1.default.findOne({
+            _id: req.params.requestId,
+            toUser: req.userId,
+        });
+        if (!serviceRequest) {
+            throw new customError_1.http404Error("REQUEST_NOT_FOUND");
+        }
+        if (serviceRequest.status !== "pending") {
+            throw new customError_1.http422Error("REQUEST_ALREADY_PROCESSED");
+        }
+        if (status === "accepted") {
+            const service = yield service_1.default.findOneAndUpdate({
+                _id: serviceRequest.service,
+                spotsAvailable: { $gt: 0 },
+            }, { $inc: { spotsAvailable: -1 } }, { returnDocument: "after" });
+            if (!service) {
+                throw new customError_1.http422Error("NO_SPOTS_AVAILABLE");
+            }
+        }
+        serviceRequest.status = status;
+        yield serviceRequest.save();
+        res.status(200).json({ serviceRequest });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updateServiceRequestStatus = updateServiceRequestStatus;
