@@ -16,13 +16,15 @@ import {
   getUserServices,
   getServicesByLocation,
   updateService,
-  deleteService,
+  cancelService,
+  updateServiceStatus,
 } from "../controllers/serviceController";
 import {
   createServiceRequest,
   updateServiceRequestStatus,
 } from "../controllers/serviceRequestController";
 import { auth } from "../middleware/auth";
+import { rateUser } from "../controllers/reviewController";
 
 require("dotenv").config();
 
@@ -44,27 +46,41 @@ router.get("/user", auth, validateAuthUser, getUser);
 //Service Routes
 router.get("/services", auth, validateAuthUser, getUserServices);
 router.get("/services/:locationStart/:locationEnd", getServicesByLocation);
-router.post("/create-service", auth, validateAuthUser, createService);
+router.post("/services/create", auth, validateAuthUser, createService);
 router.put("/services/:serviceId", auth, validateServiceExist, updateService);
-router.delete(
-  "/services/:serviceId",
+router.put(
+  "/services/:serviceId/status",
   auth,
   validateServiceExist,
-  deleteService,
+  updateServiceStatus,
+);
+router.put(
+  "/services/:serviceId/cancel",
+  auth,
+  validateServiceExist,
+  cancelService,
 );
 
 //Service Request Routes
 router.post(
-  "/create-service-request",
+  "/service-request/create",
   auth,
   validateBodyServiceExist,
   createServiceRequest,
 );
 router.put(
-  "/update-service-request/:requestId",
+  "/service-request/:requestId/status",
   auth,
   validateServiceRequestExist,
   updateServiceRequestStatus,
+);
+
+// Review routes
+router.post(
+  "/rate-user/:requestId",
+  auth,
+  validateServiceRequestExist,
+  rateUser,
 );
 
 //404

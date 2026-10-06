@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteService = exports.getUserServices = exports.getServicesByLocation = exports.updateService = exports.createService = void 0;
+exports.cancelService = exports.getUserServices = exports.getServicesByLocation = exports.updateServiceStatus = exports.updateService = exports.createService = void 0;
 const service_1 = __importDefault(require("../model/service"));
 const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
 const express_validator_1 = require("express-validator");
@@ -38,7 +38,18 @@ const updateService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         if (!errors.isEmpty()) {
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
-        const service = yield service_1.default.findOneAndUpdate({ _id: req.params.serviceId, user: req.userId }, req.body, {
+        const { tripNote, destinationStart, destinationEnd, departureTime, cost, maxWeight, restrictedItems, spotsAvailable, transportMode, } = req.body;
+        const service = yield service_1.default.findOneAndUpdate({ _id: req.params.serviceId, user: req.userId }, {
+            tripNote,
+            destinationStart,
+            destinationEnd,
+            departureTime,
+            cost,
+            maxWeight,
+            restrictedItems,
+            spotsAvailable,
+            transportMode,
+        }, {
             returnDocument: "after",
             runValidators: true,
         });
@@ -52,12 +63,32 @@ const updateService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.updateService = updateService;
+const updateServiceStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const service = yield service_1.default.findOneAndUpdate({ _id: req.params.serviceId, user: req.userId, status: "active" }, { status: req.body.status }, { returnDocument: "after", runValidators: true });
+        if (!service) {
+            throw new customError_1.http422Error("CANNOT_CHANGE_STATUS");
+        }
+        res.status(200).json({ service });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updateServiceStatus = updateServiceStatus;
 const getServicesByLocation = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const services = yield service_1.default.find({
             status: "active",
             departureTime: { $gt: new Date() },
-        }).populate("user", "firstName lastName review");
+        }).populate({
+            path: "user",
+            select: "firstName lastName ratingSum ratingCount",
+        });
         const filtered = services.filter((s) => s.destinationStart.city.toLowerCase() ===
             req.params.locationStart.toLowerCase() &&
             s.destinationEnd.city.toLowerCase() ===
@@ -79,7 +110,10 @@ const getUserServices = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
             .sort({ createdAt: -1 })
             .populate({
             path: "requests",
-            populate: { path: "fromUser", select: "firstName lastName ratings" },
+            populate: {
+                path: "fromUser",
+                select: "firstName lastName",
+            },
         });
         res.status(200).json({ services });
     }
@@ -88,24 +122,25 @@ const getUserServices = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getUserServices = getUserServices;
-const deleteService = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const cancelService = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
-        const service = yield service_1.default.findOneAndDelete({
+        const service = yield service_1.default.findOneAndUpdate({
             _id: req.params.serviceId,
             user: req.userId,
-        });
+            status: "active",
+        }, { status: "cancelled" }, { returnDocument: "after" });
         if (!service) {
             throw new customError_1.http404Error("SERVICE_NOT_FOUND");
         }
-        yield serviceRequest_1.default.deleteMany({ service: service._id });
+        yield serviceRequest_1.default.updateMany({ service: service._id, status: { $in: ["pending", "accepted"] } }, { status: "cancelled" });
         res.status(204).send("success");
     }
     catch (error) {
         next(error);
     }
 });
-exports.deleteService = deleteService;
+exports.cancelService = cancelService;

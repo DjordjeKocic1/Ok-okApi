@@ -43,7 +43,7 @@ export const validateEmailExist = body("email").custom(async (value) => {
 
 export const validateServiceRequestExist = param("requestId")
   .isMongoId()
-  .withMessage("REQUEST_INVALID_ID")
+  .withMessage("INVALID_ID")
   .bail()
   .custom(async (value) => {
     const existing = await ServiceRequest.exists({ _id: value });
@@ -55,7 +55,7 @@ export const validateServiceRequestExist = param("requestId")
 const serviceExists = (location: typeof body | typeof param, field: string) =>
   location(field)
     .isMongoId()
-    .withMessage("SERVICE_INVALID_ID")
+    .withMessage("INVALID_ID")
     .bail()
     .custom(async (value) => {
       const exists = await Service.exists({ _id: value });

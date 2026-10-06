@@ -14,14 +14,6 @@ const userSchema = new Schema(
     phone: { type: String, required: false },
     idVerified: { type: Boolean, required: false },
     password: String,
-    ratings: [
-      {
-        _id: false,
-        reviewer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        rating: Number,
-        comment: { type: String, required: false },
-      },
-    ],
     searchedDestinations: [
       {
         _id: false,
@@ -29,8 +21,25 @@ const userSchema = new Schema(
         destinationEnd: { country: String, city: String },
       },
     ],
+    ratingSum: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    id: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  },
 );
+
+userSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "toUser",
+});
+
+userSchema.virtual("ratingAverage").get(function () {
+  return this.ratingCount ? this.ratingSum / this.ratingCount : 0;
+});
 
 export default mongoose.model<User>("User", userSchema);

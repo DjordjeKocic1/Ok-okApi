@@ -70,7 +70,6 @@ exports.userLogin = userLogin;
 const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
-        const id = req.params.userId;
         if (!errors.isEmpty()) {
             throw new customError_1.http422Error(errors.array()[0].msg);
         }

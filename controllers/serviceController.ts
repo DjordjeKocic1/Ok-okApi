@@ -29,16 +29,38 @@ export const createService: RequestHandler<{}, {}, ServiceProps> = async (
 export const updateService: RequestHandler<
   { serviceId: string },
   {},
-  {}
+  ServiceProps
 > = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       throw new http422Error(errors.array()[0].msg);
     }
+    const {
+      tripNote,
+      destinationStart,
+      destinationEnd,
+      departureTime,
+      cost,
+      maxWeight,
+      restrictedItems,
+      spotsAvailable,
+      transportMode,
+    } = req.body;
+
     const service = await Service.findOneAndUpdate(
       { _id: req.params.serviceId, user: req.userId },
-      req.body,
+      {
+        tripNote,
+        destinationStart,
+        destinationEnd,
+        departureTime,
+        cost,
+        maxWeight,
+        restrictedItems,
+        spotsAvailable,
+        transportMode,
+      },
       {
         returnDocument: "after",
         runValidators: true,
@@ -46,6 +68,32 @@ export const updateService: RequestHandler<
     );
     if (!service) {
       throw new http404Error("SERVICE_NOT_FOUND");
+    }
+
+    res.status(200).json({ service });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateServiceStatus: RequestHandler<
+  { serviceId: string },
+  {},
+  ServiceProps
+> = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+    const service = await Service.findOneAndUpdate(
+      { _id: req.params.serviceId, user: req.userId, status: "active" },
+      { status: req.body.status },
+      { returnDocument: "after", runValidators: true },
+    );
+
+    if (!service) {
+      throw new http422Error("CANNOT_CHANGE_STATUS");
     }
 
     res.status(200).json({ service });
@@ -63,7 +111,10 @@ export const getServicesByLocation: RequestHandler<
     const services = await Service.find({
       status: "active",
       departureTime: { $gt: new Date() },
-    }).populate("user", "firstName lastName review");
+    }).populate({
+      path: "user",
+      select: "firstName lastName ratingSum ratingCount",
+    });
     const filtered = services.filter(
       (s) =>
         s.destinationStart.city.toLowerCase() ===
@@ -87,7 +138,10 @@ export const getUserServices: RequestHandler = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "requests",
-        populate: { path: "fromUser", select: "firstName lastName ratings" },
+        populate: {
+          path: "fromUser",
+          select: "firstName lastName",
+        },
       });
     res.status(200).json({ services });
   } catch (error) {
@@ -95,7 +149,7 @@ export const getUserServices: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const deleteService: RequestHandler<
+export const cancelService: RequestHandler<
   { serviceId: string },
   {},
   {}
@@ -105,16 +159,24 @@ export const deleteService: RequestHandler<
     if (!errors.isEmpty()) {
       throw new http422Error(errors.array()[0].msg);
     }
-    const service = await Service.findOneAndDelete({
-      _id: req.params.serviceId,
-      user: req.userId,
-    });
+    const service = await Service.findOneAndUpdate(
+      {
+        _id: req.params.serviceId,
+        user: req.userId,
+        status: "active",
+      },
+      { status: "cancelled" },
+      { returnDocument: "after" },
+    );
 
     if (!service) {
       throw new http404Error("SERVICE_NOT_FOUND");
     }
 
-    await ServiceRequest.deleteMany({ service: service._id });
+    await ServiceRequest.updateMany(
+      { service: service._id, status: { $in: ["pending", "accepted"] } },
+      { status: "cancelled" },
+    );
 
     res.status(204).send("success");
   } catch (error) {

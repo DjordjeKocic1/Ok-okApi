@@ -30,6 +30,7 @@ const serviceRequestSchema = new Schema({
         enum: ["pending", "accepted", "rejected", "cancelled"],
         default: "pending",
     },
+    rated: { type: Boolean, required: false, default: false },
     transportDescription: String,
     packageWeight: Number,
     specialRequest: { type: String, required: false },

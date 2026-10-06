@@ -24,6 +24,9 @@ const createServiceRequest = (req, res, next) => __awaiter(void 0, void 0, void 
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
         const service = (yield service_1.default.findById(req.body.service));
+        if (service.spotsAvailable === 0) {
+            throw new customError_1.http422Error("NO_SPOTS_AVAILABLE");
+        }
         if (service.user.toString() === req.userId) {
             throw new customError_1.http422Error("CANNOT_REQUEST_OWN_SERVICE");
         }

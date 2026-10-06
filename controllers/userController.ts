@@ -83,7 +83,6 @@ export const userLogin: RequestHandler<{}, {}, UserProps> = async (
 export const getUser: RequestHandler = async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    const id = req.params.userId;
 
     if (!errors.isEmpty()) {
       throw new http422Error(errors.array()[0].msg);

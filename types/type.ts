@@ -33,6 +33,7 @@ export interface Review {
 export interface Service {
   _id: any;
   user: Types.ObjectId;
+  status: "active" | "cancelled" | "completed";
   tripNote: string;
   destinationStart: { country: string; city: string };
   destinationEnd: { country: string; city: string };
@@ -49,6 +50,7 @@ export interface ServiceRequest {
   fromUser: Types.ObjectId;
   toUser: Types.ObjectId;
   status: "pending" | "accepted" | "rejected" | "cancelled";
+  rated: boolean;
   transportDescription: string;
   packageWeight: number;
   specialRequest?: string;

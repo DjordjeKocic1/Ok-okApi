@@ -21,6 +21,10 @@ export const createServiceRequest: RequestHandler<
 
     const service = (await Service.findById(req.body.service)) as ServiceProps;
 
+    if (service.spotsAvailable === 0) {
+      throw new http422Error("NO_SPOTS_AVAILABLE");
+    }
+
     if (service.user.toString() === req.userId) {
       throw new http422Error("CANNOT_REQUEST_OWN_SERVICE");
     }

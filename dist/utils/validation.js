@@ -53,7 +53,7 @@ exports.validateEmailExist = (0, express_validator_1.body)("email").custom((valu
 }));
 exports.validateServiceRequestExist = (0, express_validator_1.param)("requestId")
     .isMongoId()
-    .withMessage("REQUEST_INVALID_ID")
+    .withMessage("INVALID_ID")
     .bail()
     .custom((value) => __awaiter(void 0, void 0, void 0, function* () {
     const existing = yield serviceRequest_1.default.exists({ _id: value });
@@ -63,7 +63,7 @@ exports.validateServiceRequestExist = (0, express_validator_1.param)("requestId"
 }));
 const serviceExists = (location, field) => location(field)
     .isMongoId()
-    .withMessage("SERVICE_INVALID_ID")
+    .withMessage("INVALID_ID")
     .bail()
     .custom((value) => __awaiter(void 0, void 0, void 0, function* () {
     const exists = yield service_1.default.exists({ _id: value });
