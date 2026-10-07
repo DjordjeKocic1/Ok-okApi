@@ -20,7 +20,7 @@ router.post("/auth/login", validation_1.validateEmail, validation_1.validateEmai
 router.get("/user", auth_1.auth, validation_1.validateAuthUser, userController_1.getUser);
 //Service Routes
 router.get("/services", auth_1.auth, validation_1.validateAuthUser, serviceController_1.getUserServices);
-router.get("/services/:locationStart/:locationEnd", serviceController_1.getServicesByLocation);
+router.get("/services/:locationStart/:locationEnd", auth_1.auth, serviceController_1.getServicesByLocation);
 router.post("/services/create", auth_1.auth, validation_1.validateAuthUser, serviceController_1.createService);
 router.put("/services/:serviceId", auth_1.auth, validation_1.validateServiceExist, serviceController_1.updateService);
 router.put("/services/:serviceId/status", auth_1.auth, validation_1.validateServiceExist, serviceController_1.updateServiceStatus);

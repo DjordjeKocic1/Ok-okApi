@@ -45,7 +45,11 @@ router.get("/user", auth, validateAuthUser, getUser);
 
 //Service Routes
 router.get("/services", auth, validateAuthUser, getUserServices);
-router.get("/services/:locationStart/:locationEnd", getServicesByLocation);
+router.get(
+  "/services/:locationStart/:locationEnd",
+  auth,
+  getServicesByLocation,
+);
 router.post("/services/create", auth, validateAuthUser, createService);
 router.put("/services/:serviceId", auth, validateServiceExist, updateService);
 router.put(
