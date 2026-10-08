@@ -20,7 +20,7 @@ export const createService: RequestHandler<{}, {}, ServiceProps> = async (
       user: req.userId,
     });
     await service.save();
-    res.status(201).send("success");
+    res.status(204).send("success");
   } catch (error) {
     next(error);
   }

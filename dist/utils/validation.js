@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateServiceRequestExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validatePassword = exports.validateEmail = void 0;
+exports.validateBodyServiceExist = exports.validateServiceExist = exports.validateServiceRequestExist = exports.validateEmailExist = exports.validateDuplicateEmail = exports.validateAuthUser = exports.validateNewPassword = exports.validatePassword = exports.validateEmail = void 0;
 const express_validator_1 = require("express-validator");
 const user_1 = __importDefault(require("../model/user"));
 const service_1 = __importDefault(require("../model/service"));
@@ -24,7 +24,7 @@ exports.validateEmail = (0, express_validator_1.body)("email")
     .bail()
     .isEmail()
     .withMessage("EMAIL_NOT_VALID_FORMAT");
-exports.validatePassword = (0, express_validator_1.body)("password")
+const passwordRules = (field) => (0, express_validator_1.body)(field)
     .trim()
     .notEmpty()
     .withMessage("PASSWORD_REQUIRED")
@@ -34,6 +34,8 @@ exports.validatePassword = (0, express_validator_1.body)("password")
     .bail()
     .matches(/\d/)
     .withMessage("PASSWORD_NEEDS_NUMBER");
+exports.validatePassword = passwordRules("password");
+exports.validateNewPassword = passwordRules("newPassword");
 exports.validateAuthUser = (0, express_validator_1.check)().custom((_value_1, _a) => __awaiter(void 0, [_value_1, _a], void 0, function* (_value, { req }) {
     const exists = yield user_1.default.exists({ _id: req.userId });
     if (!exists)

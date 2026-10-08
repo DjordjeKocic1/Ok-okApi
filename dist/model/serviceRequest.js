@@ -27,14 +27,32 @@ const serviceRequestSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["pending", "accepted", "rejected", "cancelled"],
+        enum: {
+            values: ["pending", "accepted", "rejected", "cancelled"],
+            message: "INVALID_STATUS",
+        },
         default: "pending",
     },
     rated: { type: Boolean, required: false, default: false },
-    transportDescription: String,
-    packageWeight: Number,
-    specialRequest: { type: String, required: false },
-    specialRequestCost: { type: Number, required: false },
+    transportDescription: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 5,
+        maxlength: 500,
+    },
+    packageWeight: {
+        type: Number,
+        min: 0,
+        max: 200,
+    },
+    specialRequest: {
+        type: String,
+        required: false,
+        minlength: 5,
+        maxlength: 500,
+    },
+    specialRequestCost: { type: Number, required: false, min: 0 },
 }, { timestamps: true });
 serviceRequestSchema.index({ service: 1, fromUser: 1 }, { unique: true });
 exports.default = mongoose_1.default.model("ServiceRequest", serviceRequestSchema);

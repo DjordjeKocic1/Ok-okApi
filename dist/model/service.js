@@ -6,27 +6,79 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const Schema = mongoose_1.default.Schema;
 const serviceSchema = new Schema({
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        immutable: true,
+    },
     status: {
         type: String,
-        enum: ["active", "cancelled", "completed"],
+        enum: {
+            values: ["active", "cancelled", "completed"],
+            message: "INVALID_STATUS",
+        },
         default: "active",
     },
-    tripNote: String,
-    destinationStart: { country: String, city: String },
-    destinationEnd: { country: String, city: String },
+    tripNote: {
+        type: String,
+        trim: true,
+        required: true,
+        minlength: 5,
+        maxlength: 500,
+    },
+    destinationStart: {
+        country: {
+            type: String,
+            required: true,
+        },
+        city: {
+            type: String,
+            required: true,
+        },
+    },
+    destinationEnd: {
+        country: {
+            type: String,
+            required: true,
+        },
+        city: {
+            type: String,
+            required: true,
+        },
+    },
     departureTime: { type: Date, required: true },
-    cost: Number,
-    maxWeight: Number,
+    cost: { type: Number, min: 0 },
+    maxWeight: {
+        type: Number,
+        required: true,
+        min: 0.1,
+        max: 500,
+    },
     restrictedItems: {
-        type: [String],
-        enum: ["pets", "breakingGlass", "flammableMaterials", "alcohol"],
+        type: [
+            {
+                type: String,
+                enum: {
+                    values: ["pets", "breakingGlass", "flammableMaterials", "alcohol"],
+                    message: "INVALID_RESTRICTED_ITEM",
+                },
+            },
+        ],
         default: [],
     },
-    spotsAvailable: Number,
+    spotsAvailable: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
     transportMode: {
         type: String,
-        enum: ["car", "bus", "plane", "train", "truck"],
+        required: true,
+        enum: {
+            values: ["car", "bus", "plane", "train", "truck"],
+            message: "INVALID_TRANSPORT_MODE",
+        },
     },
 }, {
     timestamps: true,

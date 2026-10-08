@@ -65,7 +65,7 @@ export const rateUser: RequestHandler<
     if (!requestToUpdate)
       throw new http422Error("REQUEST_NOT_FOUND_OR_ALREADY_RATED");
 
-    res.status(201).json({ message: "REVIEW_CREATED" });
+    res.status(204).send("success");
   } catch (error) {
     next(error);
   }

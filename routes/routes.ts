@@ -1,5 +1,11 @@
 import express from "express";
-import { createUser, getUser, userLogin } from "../controllers/userController";
+import {
+  createUser,
+  getUser,
+  updateUser,
+  updateUserPassword,
+  userLogin,
+} from "../controllers/userController";
 import {
   validateEmail,
   validateDuplicateEmail,
@@ -9,6 +15,7 @@ import {
   validateServiceExist,
   validateBodyServiceExist,
   validateServiceRequestExist,
+  validateNewPassword,
 } from "../utils/validation";
 import { http404Error } from "../utils/customError";
 import {
@@ -21,6 +28,8 @@ import {
 } from "../controllers/serviceController";
 import {
   createServiceRequest,
+  getServiceRequests,
+  updateServiceRequest,
   updateServiceRequestStatus,
 } from "../controllers/serviceRequestController";
 import { auth } from "../middleware/auth";
@@ -42,6 +51,15 @@ router.post("/auth/login", validateEmail, validateEmailExist, userLogin);
 
 //User routes
 router.get("/user", auth, validateAuthUser, getUser);
+router.put("/user", auth, validateAuthUser, updateUser);
+router.put(
+  "/user/password",
+  auth,
+  validateAuthUser,
+  validatePassword,
+  validateNewPassword,
+  updateUserPassword,
+);
 
 //Service Routes
 router.get("/services", auth, validateAuthUser, getUserServices);
@@ -66,14 +84,21 @@ router.put(
 );
 
 //Service Request Routes
+router.get("/service-requests", auth, getServiceRequests);
 router.post(
-  "/service-request/create",
+  "/service-requests/create",
   auth,
   validateBodyServiceExist,
   createServiceRequest,
 );
 router.put(
-  "/service-request/:requestId/status",
+  "/service-requests/:requestId/update",
+  auth,
+  validateServiceRequestExist,
+  updateServiceRequest,
+);
+router.put(
+  "/service-requests/:requestId/status",
   auth,
   validateServiceRequestExist,
   updateServiceRequestStatus,

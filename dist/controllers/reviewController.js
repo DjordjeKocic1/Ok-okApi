@@ -61,7 +61,7 @@ const rateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         }, { rated: true });
         if (!requestToUpdate)
             throw new customError_1.http422Error("REQUEST_NOT_FOUND_OR_ALREADY_RATED");
-        res.status(201).json({ message: "REVIEW_CREATED" });
+        res.status(204).send("success");
     }
     catch (error) {
         next(error);

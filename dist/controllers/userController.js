@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUser = exports.userLogin = exports.createUser = void 0;
+exports.updateUserPassword = exports.updateUser = exports.getUser = exports.userLogin = exports.createUser = void 0;
 const user_1 = __importDefault(require("../model/user"));
 const customError_1 = require("../utils/customError");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -73,7 +73,7 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         if (!errors.isEmpty()) {
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
-        const user = (yield user_1.default.findById(req.userId));
+        const user = (yield user_1.default.findById(req.userId).select("-password"));
         res.status(200).json({ user });
     }
     catch (error) {
@@ -81,3 +81,46 @@ const getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getUser = getUser;
+const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const { firstName, lastName, phone, searchedDestinations } = req.body;
+        const user = yield user_1.default.findByIdAndUpdate(req.userId, {
+            firstName,
+            lastName,
+            phone,
+            searchedDestinations,
+        }, { returnDocument: "after", runValidators: true }).select("-password");
+        res.status(200).json({ user });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updateUser = updateUser;
+const updateUserPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const { password, newPassword } = req.body;
+        const user = (yield user_1.default.findById(req.userId));
+        const matchsCurrentPassword = yield bcryptjs_1.default.compare(password.replace(" ", ""), user.password);
+        if (!matchsCurrentPassword)
+            throw new customError_1.http422Error("WRONG_PASSWORD");
+        const samePassword = yield bcryptjs_1.default.compare(newPassword.replace(" ", ""), user.password);
+        if (samePassword)
+            throw new customError_1.http422Error("NEW_PASSWORD_SAME_AS_OLD");
+        user.password = yield bcryptjs_1.default.hash(newPassword.replace(" ", ""), 12);
+        yield user.save();
+        res.status(200).json("success");
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updateUserPassword = updateUserPassword;

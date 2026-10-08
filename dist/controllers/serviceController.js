@@ -25,7 +25,7 @@ const createService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         }
         const service = new service_1.default(Object.assign(Object.assign({}, req.body), { user: req.userId }));
         yield service.save();
-        res.status(201).send("success");
+        res.status(204).send("success");
     }
     catch (error) {
         next(error);

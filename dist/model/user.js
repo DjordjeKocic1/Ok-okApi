@@ -6,15 +6,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const Schema = mongoose_1.default.Schema;
 const userSchema = new Schema({
-    firstName: String,
-    lastName: String,
+    firstName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    lastName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
     email: {
         type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
         unique: true,
     },
+    password: { type: String, required: true },
     phone: { type: String, required: false },
-    idVerified: { type: Boolean, required: false },
-    password: String,
+    idVerified: { type: Boolean, required: false, default: false },
     searchedDestinations: [
         {
             _id: false,
@@ -22,8 +33,8 @@ const userSchema = new Schema({
             destinationEnd: { country: String, city: String },
         },
     ],
-    ratingSum: { type: Number, default: 0 },
-    ratingCount: { type: Number, default: 0 },
+    ratingSum: { type: Number, default: 0, min: 0 },
+    ratingCount: { type: Number, default: 0, min: 0 },
 }, {
     timestamps: true,
     id: false,

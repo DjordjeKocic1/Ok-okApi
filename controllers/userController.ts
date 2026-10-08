@@ -87,9 +87,81 @@ export const getUser: RequestHandler = async (req, res, next) => {
     if (!errors.isEmpty()) {
       throw new http422Error(errors.array()[0].msg);
     }
-    const user = (await User.findById(req.userId)) as UserProps;
+    const user = (await User.findById(req.userId).select(
+      "-password",
+    )) as UserProps;
 
     res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUser: RequestHandler<{}, {}, UserProps> = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    const { firstName, lastName, phone, searchedDestinations } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      {
+        firstName,
+        lastName,
+        phone,
+        searchedDestinations,
+      },
+      { returnDocument: "after", runValidators: true },
+    ).select("-password");
+
+    res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserPassword: RequestHandler<
+  {},
+  {},
+  { password: string; newPassword: string }
+> = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    const { password, newPassword } = req.body;
+
+    const user = (await User.findById(req.userId))!;
+
+    const matchsCurrentPassword = await bcryprt.compare(
+      password.replace(" ", ""),
+      user.password,
+    );
+
+    if (!matchsCurrentPassword) throw new http422Error("WRONG_PASSWORD");
+
+    const samePassword = await bcryprt.compare(
+      newPassword.replace(" ", ""),
+      user.password,
+    );
+
+    if (samePassword) throw new http422Error("NEW_PASSWORD_SAME_AS_OLD");
+
+    user.password = await bcryprt.hash(newPassword.replace(" ", ""), 12);
+
+    await user.save();
+
+    res.status(200).json("success");
   } catch (error) {
     next(error);
   }

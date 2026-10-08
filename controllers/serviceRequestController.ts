@@ -8,6 +8,74 @@ import { validationResult } from "express-validator";
 import { http404Error, http422Error } from "../utils/customError";
 import Service from "../model/service";
 
+export const getServiceRequests: RequestHandler = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    const serviceRequest = await ServiceRequest.find({
+      fromUser: req.userId,
+    }).populate({
+      path: "service",
+      select:
+        "status destinationStart destinationEnd departureTime transportMode spotsAvailable cost",
+      populate: {
+        path: "user",
+        select: "firstName lastName ratingSum ratingCount",
+      },
+    });
+
+    res.status(200).json({ serviceRequest });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateServiceRequest: RequestHandler<
+  { requestId: string },
+  {},
+  ServiceRequestProps
+> = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    const {
+      transportDescription,
+      packageWeight,
+      specialRequest,
+      specialRequestCost,
+    } = req.body;
+
+    const serviceRequest = await ServiceRequest.findOneAndUpdate(
+      {
+        _id: req.params.requestId,
+        fromUser: req.userId,
+        status: "pending",
+      },
+      {
+        transportDescription,
+        packageWeight,
+        specialRequest,
+        specialRequestCost,
+      },
+      { returnDocument: "after", runValidators: true },
+    );
+
+    if (!serviceRequest) {
+      throw new http404Error("REQUEST_NOT_FOUND");
+    }
+
+    res.status(200).json({ serviceRequest });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createServiceRequest: RequestHandler<
   {},
   {},
@@ -46,7 +114,7 @@ export const createServiceRequest: RequestHandler<
 
     await serviceRequest.save();
 
-    res.status(201).send("success");
+    res.status(204).send("success");
   } catch (error) {
     next(error);
   }

@@ -18,6 +18,8 @@ router.post("/auth/create-account", validation_1.validateEmail, validation_1.val
 router.post("/auth/login", validation_1.validateEmail, validation_1.validateEmailExist, userController_1.userLogin);
 //User routes
 router.get("/user", auth_1.auth, validation_1.validateAuthUser, userController_1.getUser);
+router.put("/user", auth_1.auth, validation_1.validateAuthUser, userController_1.updateUser);
+router.put("/user/password", auth_1.auth, validation_1.validateAuthUser, validation_1.validatePassword, validation_1.validateNewPassword, userController_1.updateUserPassword);
 //Service Routes
 router.get("/services", auth_1.auth, validation_1.validateAuthUser, serviceController_1.getUserServices);
 router.get("/services/:locationStart/:locationEnd", auth_1.auth, serviceController_1.getServicesByLocation);
@@ -26,8 +28,10 @@ router.put("/services/:serviceId", auth_1.auth, validation_1.validateServiceExis
 router.put("/services/:serviceId/status", auth_1.auth, validation_1.validateServiceExist, serviceController_1.updateServiceStatus);
 router.put("/services/:serviceId/cancel", auth_1.auth, validation_1.validateServiceExist, serviceController_1.cancelService);
 //Service Request Routes
-router.post("/service-request/create", auth_1.auth, validation_1.validateBodyServiceExist, serviceRequestController_1.createServiceRequest);
-router.put("/service-request/:requestId/status", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.updateServiceRequestStatus);
+router.get("/service-requests", auth_1.auth, serviceRequestController_1.getServiceRequests);
+router.post("/service-requests/create", auth_1.auth, validation_1.validateBodyServiceExist, serviceRequestController_1.createServiceRequest);
+router.put("/service-requests/:requestId/update", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.updateServiceRequest);
+router.put("/service-requests/:requestId/status", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.updateServiceRequestStatus);
 // Review routes
 router.post("/rate-user/:requestId", auth_1.auth, validation_1.validateServiceRequestExist, reviewController_1.rateUser);
 //404

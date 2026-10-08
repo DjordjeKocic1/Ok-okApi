@@ -11,16 +11,20 @@ export const validateEmail = body("email")
   .isEmail()
   .withMessage("EMAIL_NOT_VALID_FORMAT");
 
-export const validatePassword = body("password")
-  .trim()
-  .notEmpty()
-  .withMessage("PASSWORD_REQUIRED")
-  .bail()
-  .isLength({ min: 8 })
-  .withMessage("PASSWORD_TOO_SHORT")
-  .bail()
-  .matches(/\d/)
-  .withMessage("PASSWORD_NEEDS_NUMBER");
+const passwordRules = (field: "password" | "newPassword") =>
+  body(field)
+    .trim()
+    .notEmpty()
+    .withMessage("PASSWORD_REQUIRED")
+    .bail()
+    .isLength({ min: 8 })
+    .withMessage("PASSWORD_TOO_SHORT")
+    .bail()
+    .matches(/\d/)
+    .withMessage("PASSWORD_NEEDS_NUMBER");
+
+export const validatePassword = passwordRules("password");
+export const validateNewPassword = passwordRules("newPassword");
 
 export const validateAuthUser = check().custom(async (_value, { req }) => {
   const exists = await User.exists({ _id: req.userId });
