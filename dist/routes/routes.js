@@ -11,7 +11,6 @@ const serviceController_1 = require("../controllers/serviceController");
 const serviceRequestController_1 = require("../controllers/serviceRequestController");
 const auth_1 = require("../middleware/auth");
 const reviewController_1 = require("../controllers/reviewController");
-const chatController_1 = require("../controllers/chatController");
 require("dotenv").config();
 const router = express_1.default.Router();
 //Auth Routes
@@ -36,9 +35,9 @@ router.put("/service-requests/:requestId/status", auth_1.auth, validation_1.vali
 // Review routes
 router.post("/rate-user/:requestId", auth_1.auth, validation_1.validateServiceRequestExist, reviewController_1.rateUser);
 //Chat routes
-router.get("/chats", auth_1.auth, chatController_1.getChats);
-router.get("/chat/:userId", auth_1.auth, chatController_1.getChat);
-router.post("/chat/send-message/:userId", auth_1.auth, chatController_1.sendMessage);
+// router.get("/chats", auth, getChats);
+// router.get("/chat/:userId", auth, getChat);
+// router.post("/chat/send-message/:userId", auth, sendMessage);
 //404
 router.all("/{*splat}", (req, res, next) => {
     throw new customError_1.http404Error(`Requested url not found`);

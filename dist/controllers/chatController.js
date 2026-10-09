@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChats = exports.getChat = exports.sendMessage = void 0;
+exports.getChat = exports.getChats = exports.sendMessage = void 0;
 const chat_1 = __importDefault(require("../model/chat"));
 const customError_1 = require("../utils/customError");
 const mongoose_1 = require("mongoose");
@@ -44,17 +44,11 @@ const sendMessage = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.sendMessage = sendMessage;
-const getChat = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-    }
-    catch (error) {
-        next(error);
-    }
-});
-exports.getChat = getChat;
 const getChats = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const chats = yield chat_1.default.find({ users: req.userId }, { messages: { $slice: -1 } }).populate("users", "firstName");
+        const chats = yield chat_1.default.find({ users: req.userId }, { messages: { $slice: -1 }, users: 1, updatedAt: 1 })
+            .populate("users", "firstName")
+            .sort({ updatedAt: -1 });
         res.status(200).json({ chats });
     }
     catch (error) {
@@ -62,3 +56,15 @@ const getChats = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getChats = getChats;
+const getChat = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const chat = yield chat_1.default.findOne({
+            users: { $all: [req.userId, req.params.userId] },
+        });
+        res.status(200).json({ chat: chat === null || chat === void 0 ? void 0 : chat.messages });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getChat = getChat;
