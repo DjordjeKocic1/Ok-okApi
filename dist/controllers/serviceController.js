@@ -39,7 +39,7 @@ const updateService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
         const { tripNote, destinationStart, destinationEnd, departureTime, cost, maxWeight, restrictedItems, spotsAvailable, transportMode, } = req.body;
-        const service = yield service_1.default.findOneAndUpdate({ _id: req.params.serviceId, user: req.userId }, {
+        const service = yield service_1.default.findOneAndUpdate({ _id: req.params.serviceId, user: req.userId, status: "active" }, {
             tripNote,
             destinationStart,
             destinationEnd,

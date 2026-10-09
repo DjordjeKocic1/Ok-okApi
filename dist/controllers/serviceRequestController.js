@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateServiceRequestStatus = exports.createServiceRequest = exports.updateServiceRequest = exports.getServiceRequests = void 0;
+exports.sendServiceRequestMessages = exports.updateServiceRequestStatus = exports.createServiceRequest = exports.updateServiceRequest = exports.getServiceRequests = void 0;
 const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
 const express_validator_1 = require("express-validator");
 const customError_1 = require("../utils/customError");
@@ -131,3 +131,30 @@ const updateServiceRequestStatus = (req, res, next) => __awaiter(void 0, void 0,
     }
 });
 exports.updateServiceRequestStatus = updateServiceRequestStatus;
+const sendServiceRequestMessages = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        const request = yield serviceRequest_1.default.findOneAndUpdate({
+            _id: req.params.requestId,
+            status: { $in: ["pending", "accepted"] },
+            $or: [{ fromUser: req.userId }, { toUser: req.userId }],
+        }, {
+            $push: {
+                messages: {
+                    $each: [{ sender: req.userId, text: req.body.text }],
+                    $slice: -20,
+                },
+            },
+        }, { returnDocument: "after", runValidators: true }).populate("messages.sender", "firstName lastName");
+        if (!request)
+            throw new customError_1.http404Error("REQUEST_NOT_FOUND_OR_CHAT_CLOSED");
+        res.status(200).json({ request });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.sendServiceRequestMessages = sendServiceRequestMessages;

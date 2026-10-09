@@ -53,6 +53,27 @@ const serviceRequestSchema = new Schema({
         maxlength: 500,
     },
     specialRequestCost: { type: Number, required: false, min: 0 },
+    messages: {
+        type: [
+            {
+                sender: {
+                    type: Schema.Types.ObjectId,
+                    ref: "User",
+                    required: true,
+                    immutable: true,
+                },
+                text: {
+                    type: String,
+                    required: true,
+                    trim: true,
+                    minlength: 1,
+                    maxlength: 1000,
+                },
+                createdAt: { type: Date, default: Date.now, immutable: true },
+            },
+        ],
+        default: [],
+    },
 }, { timestamps: true });
 serviceRequestSchema.index({ service: 1, fromUser: 1 }, { unique: true });
 exports.default = mongoose_1.default.model("ServiceRequest", serviceRequestSchema);

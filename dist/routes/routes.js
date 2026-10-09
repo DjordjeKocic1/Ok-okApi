@@ -30,14 +30,11 @@ router.put("/services/:serviceId/cancel", auth_1.auth, validation_1.validateServ
 //Service Request Routes
 router.get("/service-requests", auth_1.auth, serviceRequestController_1.getServiceRequests);
 router.post("/service-requests/create", auth_1.auth, validation_1.validateBodyServiceExist, serviceRequestController_1.createServiceRequest);
+router.put("/service-requests/:requestId/send-message", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.sendServiceRequestMessages);
 router.put("/service-requests/:requestId/update", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.updateServiceRequest);
 router.put("/service-requests/:requestId/status", auth_1.auth, validation_1.validateServiceRequestExist, serviceRequestController_1.updateServiceRequestStatus);
 // Review routes
 router.post("/rate-user/:requestId", auth_1.auth, validation_1.validateServiceRequestExist, reviewController_1.rateUser);
-//Chat routes
-// router.get("/chats", auth, getChats);
-// router.get("/chat/:userId", auth, getChat);
-// router.post("/chat/send-message/:userId", auth, sendMessage);
 //404
 router.all("/{*splat}", (req, res, next) => {
     throw new customError_1.http404Error(`Requested url not found`);

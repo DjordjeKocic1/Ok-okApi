@@ -169,3 +169,39 @@ export const updateServiceRequestStatus: RequestHandler<
     next(error);
   }
 };
+
+export const sendServiceRequestMessages: RequestHandler<
+  { requestId: string },
+  {},
+  { text: string }
+> = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    const request = await ServiceRequest.findOneAndUpdate(
+      {
+        _id: req.params.requestId,
+        status: { $in: ["pending", "accepted"] },
+        $or: [{ fromUser: req.userId }, { toUser: req.userId }],
+      },
+      {
+        $push: {
+          messages: {
+            $each: [{ sender: req.userId, text: req.body.text }],
+            $slice: -20,
+          },
+        },
+      },
+      { returnDocument: "after", runValidators: true },
+    ).populate("messages.sender", "firstName lastName");
+
+    if (!request) throw new http404Error("REQUEST_NOT_FOUND_OR_CHAT_CLOSED");
+
+    res.status(200).json({ request });
+  } catch (error) {
+    next(error);
+  }
+};

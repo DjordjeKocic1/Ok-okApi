@@ -49,7 +49,7 @@ export const updateService: RequestHandler<
     } = req.body;
 
     const service = await Service.findOneAndUpdate(
-      { _id: req.params.serviceId, user: req.userId },
+      { _id: req.params.serviceId, user: req.userId, status: "active" },
       {
         tripNote,
         destinationStart,

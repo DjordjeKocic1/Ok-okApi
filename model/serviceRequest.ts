@@ -52,6 +52,27 @@ const serviceRequestSchema = new Schema(
       maxlength: 500,
     },
     specialRequestCost: { type: Number, required: false, min: 0 },
+    messages: {
+      type: [
+        {
+          sender: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            immutable: true,
+          },
+          text: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 1,
+            maxlength: 1000,
+          },
+          createdAt: { type: Date, default: Date.now, immutable: true },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true },
 );
