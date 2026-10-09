@@ -34,6 +34,7 @@ import {
 } from "../controllers/serviceRequestController";
 import { auth } from "../middleware/auth";
 import { rateUser } from "../controllers/reviewController";
+import { getChat, getChats, sendMessage } from "../controllers/chatController";
 
 require("dotenv").config();
 
@@ -111,6 +112,11 @@ router.post(
   validateServiceRequestExist,
   rateUser,
 );
+
+//Chat routes
+// router.get("/chats", auth, getChats);
+// router.get("/chat/:userId", auth, getChat);
+// router.post("/chat/send-message/:userId", auth, sendMessage);
 
 //404
 router.all("/{*splat}", (req, res, next) => {
