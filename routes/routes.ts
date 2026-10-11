@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createUser,
+  deleteUser,
   getUser,
   updateUser,
   updateUserPassword,
@@ -60,6 +61,7 @@ router.put(
   validateNewPassword,
   updateUserPassword,
 );
+router.delete("/user", auth, validateAuthUser, deleteUser);
 
 //Service Routes
 router.get("/services", auth, validateAuthUser, getUserServices);

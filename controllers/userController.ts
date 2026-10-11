@@ -1,10 +1,13 @@
 import { RequestHandler } from "express";
 import User from "../model/user";
-import { http404Error, http422Error } from "../utils/customError";
+import { http422Error } from "../utils/customError";
 import jwt from "jsonwebtoken";
 import bcryprt from "bcryptjs";
 import { User as UserProps } from "../types/type";
 import { validationResult } from "express-validator";
+import Service from "../model/service";
+import ServiceRequest from "../model/serviceRequest";
+import Review from "../model/review";
 
 export const createUser: RequestHandler<{}, {}, UserProps> = async (
   req,
@@ -160,6 +163,33 @@ export const updateUserPassword: RequestHandler<
     user.password = await bcryprt.hash(newPassword.replace(" ", ""), 12);
 
     await user.save();
+
+    res.status(200).json("success");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUser: RequestHandler = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new http422Error(errors.array()[0].msg);
+    }
+
+    await Service.deleteMany({ user: req.userId });
+
+    await ServiceRequest.deleteMany({ fromUser: req.userId });
+
+    await Review.deleteMany({ toUser: req.userId });
+
+    await Review.updateMany(
+      { fromUser: req.userId },
+      { $set: { fromUser: null } },
+      { overwriteImmutable: true },
+    );
+
+    await User.findOneAndDelete({ _id: req.userId });
 
     res.status(200).json("success");
   } catch (error) {

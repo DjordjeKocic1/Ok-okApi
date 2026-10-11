@@ -12,12 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserPassword = exports.updateUser = exports.getUser = exports.userLogin = exports.createUser = void 0;
+exports.deleteUser = exports.updateUserPassword = exports.updateUser = exports.getUser = exports.userLogin = exports.createUser = void 0;
 const user_1 = __importDefault(require("../model/user"));
 const customError_1 = require("../utils/customError");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const express_validator_1 = require("express-validator");
+const service_1 = __importDefault(require("../model/service"));
+const serviceRequest_1 = __importDefault(require("../model/serviceRequest"));
+const review_1 = __importDefault(require("../model/review"));
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -124,3 +127,21 @@ const updateUserPassword = (req, res, next) => __awaiter(void 0, void 0, void 0,
     }
 });
 exports.updateUserPassword = updateUserPassword;
+const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            throw new customError_1.http422Error(errors.array()[0].msg);
+        }
+        yield service_1.default.deleteMany({ user: req.userId });
+        yield serviceRequest_1.default.deleteMany({ fromUser: req.userId });
+        yield review_1.default.deleteMany({ toUser: req.userId });
+        yield review_1.default.updateMany({ fromUser: req.userId }, { $set: { fromUser: null } }, { overwriteImmutable: true });
+        yield user_1.default.findOneAndDelete({ _id: req.userId });
+        res.status(200).json("success");
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.deleteUser = deleteUser;

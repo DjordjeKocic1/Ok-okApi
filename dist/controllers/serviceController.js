@@ -25,7 +25,7 @@ const createService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         }
         const service = new service_1.default(Object.assign(Object.assign({}, req.body), { user: req.userId }));
         yield service.save();
-        res.status(204).send("success");
+        res.status(201).json({ service });
     }
     catch (error) {
         next(error);
@@ -88,12 +88,20 @@ const getServicesByLocation = (req, res, next) => __awaiter(void 0, void 0, void
         }).populate({
             path: "user",
             select: "firstName lastName ratingSum ratingCount",
+            populate: {
+                path: "reviews",
+                select: "comment rating",
+                populate: {
+                    path: "fromUser",
+                    select: "firstName lastName",
+                },
+            },
         });
         const filtered = services.filter((s) => s.destinationStart.city.toLowerCase() ===
             req.params.locationStart.toLowerCase() &&
             s.destinationEnd.city.toLowerCase() ===
                 req.params.locationEnd.toLowerCase());
-        res.status(201).json({ services: filtered });
+        res.status(200).json({ services: filtered });
     }
     catch (error) {
         next(error);

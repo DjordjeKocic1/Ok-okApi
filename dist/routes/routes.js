@@ -20,6 +20,7 @@ router.post("/auth/login", validation_1.validateEmail, validation_1.validateEmai
 router.get("/user", auth_1.auth, validation_1.validateAuthUser, userController_1.getUser);
 router.put("/user", auth_1.auth, validation_1.validateAuthUser, userController_1.updateUser);
 router.put("/user/password", auth_1.auth, validation_1.validateAuthUser, validation_1.validatePassword, validation_1.validateNewPassword, userController_1.updateUserPassword);
+router.delete("/user", auth_1.auth, validation_1.validateAuthUser, userController_1.deleteUser);
 //Service Routes
 router.get("/services", auth_1.auth, validation_1.validateAuthUser, serviceController_1.getUserServices);
 router.get("/services/:locationStart/:locationEnd", auth_1.auth, serviceController_1.getServicesByLocation);
