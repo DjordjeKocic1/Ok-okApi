@@ -5,7 +5,7 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
   const header = req.headers.authorization;
 
   if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "NO_TOKEN" });
+    return res.status(401).json({ error: "NO_TOKEN" });
   }
 
   try {
@@ -17,6 +17,6 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     req.userId = payload.userId;
     next();
   } catch {
-    res.status(401).json({ message: "INVALID_TOKEN" });
+    res.status(401).json({ error: "INVALID_TOKEN" });
   }
 };

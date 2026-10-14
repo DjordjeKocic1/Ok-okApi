@@ -91,12 +91,26 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             throw new customError_1.http422Error(errors.array()[0].msg);
         }
         const { firstName, lastName, phone, searchedDestinations } = req.body;
-        const user = yield user_1.default.findByIdAndUpdate(req.userId, {
-            firstName,
-            lastName,
-            phone,
-            searchedDestinations,
-        }, { returnDocument: "after", runValidators: true }).select("-password");
+        const update = {
+            $set: { firstName, lastName, phone },
+        };
+        if (Array.isArray(searchedDestinations)) {
+            if (searchedDestinations.length === 0) {
+                update.$set = Object.assign(Object.assign({}, update.$set), { searchedDestinations: [] });
+            }
+            else {
+                update.$push = {
+                    searchedDestinations: {
+                        $each: searchedDestinations,
+                        $slice: -2,
+                    },
+                };
+            }
+        }
+        const user = yield user_1.default.findByIdAndUpdate(req.userId, update, {
+            returnDocument: "after",
+            runValidators: true,
+        }).select("-password");
         res.status(200).json({ user });
     }
     catch (error) {

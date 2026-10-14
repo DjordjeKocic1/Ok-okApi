@@ -114,16 +114,27 @@ export const updateUser: RequestHandler<{}, {}, UserProps> = async (
 
     const { firstName, lastName, phone, searchedDestinations } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      {
-        firstName,
-        lastName,
-        phone,
-        searchedDestinations,
-      },
-      { returnDocument: "after", runValidators: true },
-    ).select("-password");
+    const update: Record<string, unknown> = {
+      $set: { firstName, lastName, phone },
+    };
+
+    if (Array.isArray(searchedDestinations)) {
+      if (searchedDestinations.length === 0) {
+        update.$set = { ...(update.$set as object), searchedDestinations: [] };
+      } else {
+        update.$push = {
+          searchedDestinations: {
+            $each: searchedDestinations,
+            $slice: -2,
+          },
+        };
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(req.userId, update, {
+      returnDocument: "after",
+      runValidators: true,
+    }).select("-password");
 
     res.status(200).json({ user });
   } catch (error) {
