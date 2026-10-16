@@ -90,7 +90,7 @@ const getServicesByLocation = (req, res, next) => __awaiter(void 0, void 0, void
             select: "firstName lastName ratingSum ratingCount",
             populate: {
                 path: "reviews",
-                select: "comment rating",
+                select: "comment rating createdAt",
                 populate: {
                     path: "fromUser",
                     select: "firstName lastName",
@@ -145,7 +145,7 @@ const cancelService = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             throw new customError_1.http404Error("SERVICE_NOT_FOUND");
         }
         yield serviceRequest_1.default.updateMany({ service: service._id, status: { $in: ["pending", "accepted"] } }, { status: "cancelled" });
-        res.status(204).send("success");
+        res.status(201).send("success");
     }
     catch (error) {
         next(error);

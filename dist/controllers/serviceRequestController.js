@@ -89,7 +89,15 @@ const createServiceRequest = (req, res, next) => __awaiter(void 0, void 0, void 
         }
         const serviceRequest = new serviceRequest_1.default(Object.assign(Object.assign({}, req.body), { toUser: service.user, fromUser: req.userId }));
         yield serviceRequest.save();
-        res.status(204).send("success");
+        yield serviceRequest.populate({
+            path: "service",
+            select: "status destinationStart destinationEnd departureTime transportMode spotsAvailable cost",
+            populate: {
+                path: "user",
+                select: "firstName lastName ratingSum ratingCount",
+            },
+        });
+        res.status(201).send({ request: serviceRequest });
     }
     catch (error) {
         next(error);

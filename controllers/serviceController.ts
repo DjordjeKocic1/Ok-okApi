@@ -116,7 +116,7 @@ export const getServicesByLocation: RequestHandler<
       select: "firstName lastName ratingSum ratingCount",
       populate: {
         path: "reviews",
-        select: "comment rating",
+        select: "comment rating createdAt",
         populate: {
           path: "fromUser",
           select: "firstName lastName",
@@ -186,7 +186,7 @@ export const cancelService: RequestHandler<
       { status: "cancelled" },
     );
 
-    res.status(204).send("success");
+    res.status(201).send("success");
   } catch (error) {
     next(error);
   }

@@ -114,7 +114,17 @@ export const createServiceRequest: RequestHandler<
 
     await serviceRequest.save();
 
-    res.status(204).send("success");
+    await serviceRequest.populate({
+      path: "service",
+      select:
+        "status destinationStart destinationEnd departureTime transportMode spotsAvailable cost",
+      populate: {
+        path: "user",
+        select: "firstName lastName ratingSum ratingCount",
+      },
+    });
+
+    res.status(201).send({ request: serviceRequest });
   } catch (error) {
     next(error);
   }

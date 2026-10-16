@@ -43,7 +43,7 @@ const serviceRequestSchema = new Schema({
     },
     packageWeight: {
         type: Number,
-        min: 0,
+        min: 1,
         max: 200,
     },
     specialRequest: {
